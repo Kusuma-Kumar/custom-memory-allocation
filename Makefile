@@ -15,5 +15,6 @@ gdb: all
 
 strace: all
 	strace -o test-malloc.strace ./test-malloc
+
 clean:
 	rm -f my-malloc.so test-malloc
