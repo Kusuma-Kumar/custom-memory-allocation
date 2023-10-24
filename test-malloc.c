@@ -1,66 +1,80 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
+#include <unistd.h>
 #include "my-malloc.h"
 
 int main(int argc, char *argv[]) {
-    const char *message;
     void *ptr1;
+    void *ptr2;
+    void *ptr3;
+    void *ptr4;
+    uint64_t * ptr5;
     if((ptr1 = malloc(2000)) == NULL){
-        message = "malloc could not allocate for ptr1";
-        write(1, message, strlen(message));
+        printMessage("malloc could not allocate for ptr1");
         return -1;
     }else{
-        // printNode(ptr1);
-        char ptr1_str[20];  // Assuming 20 characters is sufficient for the pointer representation
-        snprintf(ptr1_str, sizeof(ptr1_str), "%p", ptr1);
-        write(1, "ptr1: ", 6);
-        write(1, ptr1_str, strlen(ptr1_str));
-        write(1, "\n", 1);
+        printMessage("ptr1: \n");
+        printNode((struct Block *)((uintptr_t)ptr1 - sizeof(struct Block)));
     }
     free(ptr1);
-    void *ptr2;
     if((ptr2 = malloc(800)) == NULL){
         // does this have to split allocation?
-        message = "malloc could not allocate for ptr3";
-        write(1, message, strlen(message));
+        printMessage("malloc could not allocate for ptr2");
         return -1;
     }else{
-        // printNode((struct Block*)ptr2);
-        char ptr2_str[20]; 
-        snprintf(ptr2_str, sizeof(ptr2_str), "%p", ptr2);
-        write(1, "ptr2: ", 6);
-        write(1, ptr2_str, strlen(ptr2_str));
-        write(1, "\n", 1);
+        printMessage("ptr2: \n");
+        printNode((struct Block *)((uintptr_t)ptr2 - sizeof(struct Block)));
     }
-    void *ptr3;
-    if((ptr3 = malloc(1210)) == NULL){
-        message = "malloc could not allocate for ptr3";
-        write(1, message, strlen(message));
+    if((ptr3 = malloc(600)) == NULL){
+        printMessage("malloc could not allocate for ptr3");
         return -1;
     }else{
-        // printNode(ptr3);
-        char ptr3_str[20];  
-        snprintf(ptr3_str, sizeof(ptr3_str), "%p", ptr3);
-        write(1, "ptr3: ", 6);
-        write(1, ptr3_str, strlen(ptr3_str));
-        write(1, "\n", 1);
+        printMessage("ptr3: \n");
+        printNode((struct Block *)((uintptr_t)ptr3 - sizeof(struct Block)));
     }
-    // free(ptr2);
     free(ptr3);
-    void *ptr4;
     if((ptr4 = malloc(1200)) == NULL){
-        message = "malloc could not allocate for ptr4";
-        write(1, message, strlen(message));
+        printMessage("malloc could not allocate for ptr4");
         return -1;
     }else{
-        // printNode(ptr4);
-        char ptr4_str[20];  // Assuming 20 characters is sufficient for the pointer representation
-        snprintf(ptr4_str, sizeof(ptr4_str), "%p", ptr4);
-        write(1, "ptr4: ", 6);
-        write(1, ptr4_str, strlen(ptr4_str));
-        write(1, "\n", 1);
+        printMessage("ptr4: \n");
+        printNode((struct Block *)((uintptr_t)ptr4 - sizeof(struct Block)));
     }
-
+    int n = 5;
+    if ((ptr5 = (void*)calloc(n, sizeof(uint64_t))) == NULL) {
+        printMessage("Calloc could not allocate for ptr5");
+        return -1;
+    }
+    else {
+        printMessage("In for loop testing calloc values\n");
+        for (int i = 0; i < n; ++i) {
+            char buffer[32];
+            int len = snprintf(buffer, sizeof(buffer), "%lu, ", ptr5[i]);
+            write(1, buffer, len);
+        }
+        printMessage("\n");
+    }
+    int *ptr = (int *)malloc(sizeof(int)*2); 
+    int *ptr_new; 
+    *ptr = 10;  
+    *(ptr + 1) = 20; 
+    ptr_new = (int *)realloc(ptr, sizeof(int)*3); 
+    *(ptr_new + 2) = 30; 
+    printMessage("In for loop testing realloc values, adding third variable to original array\n"); 
+    for (int i = 0; i < 3; ++i) {
+        char buffer[32];
+        int len = snprintf(buffer, sizeof(buffer), "%d", *(ptr_new + i));
+        write(1, buffer, len);
+        printMessage("\n");
+    }
+    uint8_t *test;
+    test = (uint8_t *)malloc(sizeof(uint8_t)*4);
+    printf("sizeof(test) = %ld\n",malloc_usable_size(test));
+    // free(test); 
+    // free(ptr2);
+    // free(ptr4);
+    // free(ptr5);
     return 0;
 }

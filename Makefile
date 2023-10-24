@@ -7,8 +7,8 @@ all: my-malloc.so test-malloc
 my-malloc.so: my-malloc.c
 	gcc $(CFLAGS) -rdynamic -shared -fPIC -o my-malloc.so my-malloc.c
 
-test-malloc: test-malloc.c my-malloc.so
-	gcc $(CFLAGS) -o test-malloc test-malloc.c
+test-malloc: test-malloc.c my-malloc.so my-malloc.c 
+	gcc $(CFLAGS) -o test-malloc test-malloc.c my-malloc.c
 
 gdb: all 
 	gdb --args env LD_PRELOAD=./my-malloc.so ./test-malloc

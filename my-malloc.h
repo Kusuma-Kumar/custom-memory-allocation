@@ -15,5 +15,6 @@ size_t malloc_usable_size(void* ptr);
 void* setNextAligned(struct Block* block, size_t size);
 void printNode(struct Block *block);
 void printMessage(const char *message);
+void split(struct Block* block, size_t size);
 
 #endif
