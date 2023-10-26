@@ -16,5 +16,7 @@ void* setNextAligned(struct Block* block, size_t size);
 void printNode(struct Block *block);
 void printMessage(const char *message);
 void split(struct Block* block, size_t size);
+size_t alignedSize(size_t size);
+void printAllNodes();
 
 #endif
