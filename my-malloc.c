@@ -62,7 +62,7 @@ void free(void *ptr) {
     struct Block *blockToFree = (struct Block *)((uintptr_t)ptr - alignedSize(sizeof(struct Block)));
     blockToFree->isFree = 1;
 
-   // Start the loop from the head and merge consecutive free blocks
+   // Start the loop from the head and merge consecutive free blocks, in case i freed one right next to another free or if i freed one in between two frees
     struct Block *current = head;
     while (current != NULL) {
         while (current->isFree == 1 && current->next->isFree == 1) {
