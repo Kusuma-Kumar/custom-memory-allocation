@@ -1,5 +1,5 @@
-pointer_to_hex_le.c
-uint64_to_string.c
 my-malloc.so
 test-malloc
 test-malloc.strace
+vgcore.*
+my-malloc original.c

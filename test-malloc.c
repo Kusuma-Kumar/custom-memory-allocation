@@ -5,22 +5,21 @@
 #include <unistd.h>
 #include "my-malloc.h"
 
-// printMessage and printNode functions are declared and linked from my-malloc
-
 int main(int argc, char *argv[]) {
     void *ptr1;
     void *ptr2;
     void *ptr3;
     void *ptr4;
     void *ptr6;
+    void *ptr7;
     uint64_t * ptr5;
     
     if((ptr1 = malloc(2003)) == NULL) {
         printMessage("malloc could not allocate for ptr1");
         return -1;
-    }else{
+    } else {
         printMessage("ptr1: \n");
-        printNode((struct Block *)((uintptr_t)ptr1 - alignedSize(sizeof(struct Block))));
+        printNode((struct memoryBlock *)((uintptr_t)ptr1 - alignedSize(sizeof(struct memoryBlock))));
         printMessage("\n");
     }
     
@@ -28,18 +27,18 @@ int main(int argc, char *argv[]) {
         // i want this to reuse to malloc1 pointer and split into another memory location
         printMessage("malloc could not allocate for ptr2");
         return -1;
-    }else{
+    } else {
         printMessage("ptr2: \n");
-        printNode((struct Block *)((uintptr_t)ptr2 - alignedSize(sizeof(struct Block))));
+        printNode((struct memoryBlock *)((uintptr_t)ptr2 - alignedSize(sizeof(struct memoryBlock))));
         printMessage("\n");
     }
 
     if((ptr3 = malloc(1)) == NULL) {
         printMessage("malloc could not allocate for ptr3");
         return -1;
-    }else{
+    } else {
         printMessage("ptr3: \n");
-        printNode((struct Block *)((uintptr_t)ptr3 - alignedSize(sizeof(struct Block))));
+        printNode((struct memoryBlock *)((uintptr_t)ptr3 - alignedSize(sizeof(struct memoryBlock))));
         printMessage("\n");
     }
 
@@ -51,6 +50,9 @@ int main(int argc, char *argv[]) {
     printMessage("\n");
     
     // if i free ptr3 ,ptr1 and then ptr2, then the three should combine
+    printMessage("\n");
+    printAllNodes();
+    printMessage("Now free 1,2,3\n");
     free(ptr3);
     free(ptr1);
     free(ptr2);
@@ -62,9 +64,9 @@ int main(int argc, char *argv[]) {
     if((ptr4 = malloc(1000)) == NULL) {
         printMessage("malloc could not allocate for ptr4");
         return -1;
-    }else{
+    } else {
         printMessage("ptr4: \n");
-        printNode((struct Block *)((uintptr_t)ptr4 - alignedSize(sizeof(struct Block))));
+        printNode((struct memoryBlock *)((uintptr_t)ptr4 - alignedSize(sizeof(struct memoryBlock))));
         printMessage("\n");
     }
 
@@ -72,14 +74,37 @@ int main(int argc, char *argv[]) {
     printAllNodes();
     printMessage("\n");
 
-    if((ptr6 = malloc(1872)) == NULL) {
+    if((ptr6 = malloc(50)) == NULL) {
         printMessage("malloc could not allocate for ptr4");
         return -1;
-    }else{
+    } else {
         printMessage("ptr6: \n");
-        printNode((struct Block *)((uintptr_t)ptr6 - alignedSize(sizeof(struct Block))));
+        printNode((struct memoryBlock *)((uintptr_t)ptr6 - alignedSize(sizeof(struct memoryBlock))));
         printMessage("\n");
     }
+
+    printMessage("\n");
+    printAllNodes();
+    printMessage("\n");
+    
+    if((ptr7 = malloc(1777)) == NULL) {
+        printMessage("malloc could not allocate for ptr4");
+        return -1;
+    } else {
+        printMessage("ptr7: \n");
+        printNode((struct memoryBlock *)((uintptr_t)ptr7 - alignedSize(sizeof(struct memoryBlock))));
+        printMessage("\n");
+    }
+
+    printMessage("\n");
+    printAllNodes();
+    printMessage("\n");
+
+    // initially requested 50 bytes for ptr6
+    ptr6 = realloc(ptr6, 1800);
+    printMessage("ptr6 after realloc: \n");
+    printNode((struct memoryBlock *)((uintptr_t)ptr6 - alignedSize(sizeof(struct memoryBlock))));
+    printMessage("\n");
 
     printMessage("\n");
     printAllNodes();
@@ -90,8 +115,7 @@ int main(int argc, char *argv[]) {
     if ((ptr5 = (void*)calloc(n, sizeof(uint64_t))) == NULL) {
         printMessage("Calloc could not allocate for ptr5");
         return -1;
-    }
-    else {
+    } else {
         printMessage("In for loop testing calloc int values\n");
         for (int i = 0; i < n; ++i) {
             char buffer[32];
@@ -120,6 +144,7 @@ int main(int argc, char *argv[]) {
         char x;
         float y;
     };
+    
     struct MyStruct* structArray;
     if ((structArray = (struct MyStruct*)calloc(n, sizeof(struct MyStruct))) == NULL) {
         printMessage("Calloc could not allocate for structArray");
@@ -151,8 +176,10 @@ int main(int argc, char *argv[]) {
     printMessage("\n");
 
     free(ptr4);
+    free(ptr6);
     free(ptr5);
     free(doubleArray);
     free(structArray);
+    free(ptr_new);
     return 0;
 }
