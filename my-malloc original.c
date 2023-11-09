@@ -37,7 +37,7 @@ void *malloc(size_t size) {
     while (current != NULL) {
         if (current->isFree == 1 && current->size >= size) {
             current->isFree = 0;
-            split(current, size);
+            // split(current, size);
             return (void *)((uintptr_t)current + alignedSize(sizeof(struct memoryBlock)));
         }
         lastMemoryBlock = current;
@@ -52,7 +52,6 @@ void *malloc(size_t size) {
     }
 
     newBlock->size = alignedSize(size);
-    // split(newBlock, size); // split the current memoryblock into two memoryblocks as it can continue using the next memoryblock intead of having to call sbrk again
     newBlock->next = NULL;
     newBlock->isFree = 0;
 
@@ -129,7 +128,7 @@ void *realloc(void *ptr, size_t size) {
     
     if(blockToResize->size > size) {
         // The existing block is large enough so split it and return a block only with requested size
-        split(blockToResize, size);
+        // split(blockToResize, size);
         return ptr;
     } 
     

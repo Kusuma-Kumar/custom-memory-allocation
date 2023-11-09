@@ -9,6 +9,9 @@
 #define ALIGNMENT 16
 #define SBRK_REQUEST 2048
 
+size_t alignedSize(size_t size);
+#define STRUCT_SIZE alignedSize(sizeof(struct memoryBlock))
+
 // Define a global pointer to the first block
 static struct memoryBlock *head = NULL;
 
@@ -26,19 +29,22 @@ void *malloc(size_t size) {
         head->size = alignedSize(size);
         head->isFree = 0;
         head->next = NULL;
-        return (void *)((uintptr_t)head + alignedSize(sizeof(struct memoryBlock)));
+        return (void *)((uintptr_t)head + STRUCT_SIZE);
     }
     
     // loop through structs to see if you have an empty position that has been freed
     struct memoryBlock *current = head;
-    // Storing the last Node of the linked list to update the next pointer of the last block to point to this new block. Prevents me from having to loop through again
+    // Storing the last Node of the linked list to update the next pointer of the last block to point to this new block. 
+    // Prevents me from having to loop through again if I do not have a free block i can use
     struct memoryBlock *lastMemoryBlock = head;
     
     while (current != NULL) {
         if (current->isFree == 1 && current->size >= size) {
             current->isFree = 0;
+            // Free the unused chunk so it is more efficent as I can use it later on 
+            // splitAndFreeUnused(current, size);
             split(current, size);
-            return (void *)((uintptr_t)current + alignedSize(sizeof(struct memoryBlock)));
+            return (void *)((uintptr_t)current + STRUCT_SIZE);
         }
         lastMemoryBlock = current;
         current = current->next;
@@ -55,9 +61,9 @@ void *malloc(size_t size) {
     newBlock->next = NULL;
     newBlock->isFree = 0;
 
-    // Update the next pointer of the last block to point to the new block
+    // Update the next pointer of the last block to point to the new block to keep them connected
     lastMemoryBlock->next = newBlock;
-    return (void *)((uintptr_t)newBlock + alignedSize(sizeof(struct memoryBlock)));
+    return (void *)((uintptr_t)newBlock + STRUCT_SIZE);
 }
 
 void free(void *ptr) {
@@ -65,8 +71,7 @@ void free(void *ptr) {
     if (ptr == NULL) {
         return; 
     }
-    
-    struct memoryBlock *blockToFree = (struct memoryBlock *)((uintptr_t)ptr - alignedSize(sizeof(struct memoryBlock)));
+    struct memoryBlock *blockToFree = (struct memoryBlock *)((uintptr_t)ptr - STRUCT_SIZE);
     blockToFree->isFree = 1;
 
    // Start the loop from the head and merge consecutive free blocks
@@ -74,10 +79,11 @@ void free(void *ptr) {
     struct memoryBlock *current = head;
     while (current != NULL) {
         if (current->isFree == 1 && current->next != NULL && current->next->isFree == 1) {
-            current->size += current->next->size + alignedSize(sizeof(struct memoryBlock));
+            current->size += current->next->size + STRUCT_SIZE;
             current->next = current->next->next;
-        } 
-        current = current->next;
+        } else {
+            current = current->next;
+        }
     }
 }
 
@@ -101,11 +107,11 @@ void *calloc(size_t nmemb, size_t size) {
     
     // Initialize the allocated memory to zero
     memset(ptr, 0, totalSize); 
+    
     return ptr;
 }
 
 void *realloc(void *ptr, size_t size) {
-    // The realloc() function changes the size of the memory block pointed to by ptr to size bytes
     if (ptr == NULL) {
         return malloc(size);
     }
@@ -115,7 +121,7 @@ void *realloc(void *ptr, size_t size) {
         return NULL;
     }
     
-    struct memoryBlock *blockToResize = (struct memoryBlock *)((uintptr_t)ptr - alignedSize(sizeof(struct memoryBlock)));
+    struct memoryBlock *blockToResize = (struct memoryBlock *)((uintptr_t)ptr - STRUCT_SIZE);
 
     if (blockToResize->size == size) {
         // the blockToResize is already the requested size
@@ -123,11 +129,13 @@ void *realloc(void *ptr, size_t size) {
     }
     
     if(blockToResize->size > size) {
-        // The existing block is large enough so split it and return a block only with requested size
+        // The existing block is large enough so split it and return a the pointer of the block which contains only the requested size
+        // splitAndFreeUnused(blockToResize, size);
         split(blockToResize, size);
         return ptr;
     } 
     
+    // When the current block will not be able to handle our size request
     // Allocate a new block of the requested size with the same data and return the new ptr
     void *newPtr;   
     if ((newPtr = malloc(size)) == NULL) {
@@ -151,37 +159,33 @@ size_t malloc_usable_size(void *ptr) {
         return 0;
     }
     
-    struct memoryBlock *blockSize = (struct memoryBlock *)((uintptr_t)ptr - alignedSize(sizeof(struct memoryBlock)));
+    struct memoryBlock *blockSize = (struct memoryBlock *)((uintptr_t)ptr - STRUCT_SIZE);
     
     return blockSize->size;
 }
 
 void split(struct memoryBlock *blockToSplit, size_t size) {
-    if (size <= 0 || blockToSplit == NULL || blockToSplit->size < size || blockToSplit->size < ALIGNMENT + alignedSize(sizeof(struct memoryBlock))) {
-        return;
-    }
-    
-    size_t newSize = alignedSize(blockToSplit->size - alignedSize(size) - alignedSize(sizeof(struct memoryBlock)));
-    if (newSize <= ALIGNMENT) {
-        // there is point of splitting this block as it isn't big enough to store anything
-        return;
-    }
-
-    struct memoryBlock *initialNextBlock = blockToSplit->next;
+    // if I am reassigning a previous allocation, and the current request is alteast ALIGNMENT (16 byte) + sizeof(struct memoryBlock)
+    // I can store another malloc of a value between 1 and 16 here to save space, if not there is no use of splitting
+    // since I am splitting this block into two, i have to also initialize values for my next struct which is current->next
+    // initialNextBlock to keep track of the next pointer so i can reassign it to the the second block created during split
+    if((alignedSize(size) + STRUCT_SIZE + ALIGNMENT) < blockToSplit->size ) {
+        struct memoryBlock *initialNextBlock = blockToSplit->next;
         
-    blockToSplit->next = (struct memoryBlock *)((uintptr_t)blockToSplit + alignedSize(sizeof(struct memoryBlock)) + alignedSize(size));
-    blockToSplit->next->size = blockToSplit->size - alignedSize(size) - alignedSize(sizeof(struct memoryBlock));
-    blockToSplit->next->isFree = 1;
+        blockToSplit->next = (struct memoryBlock *)((uintptr_t)blockToSplit + STRUCT_SIZE + alignedSize(size));
+        blockToSplit->next->size = blockToSplit->size - alignedSize(size) - STRUCT_SIZE;
+        blockToSplit->next->isFree = 1;
         
-    if(initialNextBlock == NULL) {
-        // This happens only if the list has only one element which you are splitting right now or if the memoryblock being split is the last block in list
-        blockToSplit->next->next = NULL;
-    } else {
-        blockToSplit->next->next = initialNextBlock;
+        if(initialNextBlock == NULL) {
+            // This happens only if the list has only one element which you are splitting right now or if the memoryblock being split is the last block in list
+            blockToSplit->next->next = NULL;
+        } else {
+            blockToSplit->next->next = initialNextBlock;
+        }
+        
+        blockToSplit->size = alignedSize(size);
+        blockToSplit->isFree = 0;
     }
-        
-    blockToSplit->size = alignedSize(size);
-    blockToSplit->isFree = 0;
 }
 
 size_t alignedSize(size_t size) {

@@ -178,6 +178,7 @@ int main(int argc, char *argv[]) {
     free(ptr4);
     free(ptr6);
     free(ptr5);
+    free(ptr7);
     free(doubleArray);
     free(structArray);
     free(ptr_new);

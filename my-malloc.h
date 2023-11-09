@@ -14,7 +14,8 @@ void* realloc(void* ptr, size_t size);
 size_t malloc_usable_size(void* ptr);
 void printNode(struct memoryBlock *block);
 void printMessage(const char *message);
-void split(struct memoryBlock* block, size_t size);
+// void splitAndFreeUnused(struct memoryBlock* block, size_t size);
+void split(struct memoryBlock *blockToSplit, size_t size);
 size_t alignedSize(size_t size);
 void printAllNodes();
 
