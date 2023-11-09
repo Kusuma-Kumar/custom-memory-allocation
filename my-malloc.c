@@ -4,7 +4,16 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <malloc.h>
-#include "my-malloc.h"
+
+struct memoryBlock {
+    size_t size;      
+    struct memoryBlock *next;  
+    int isFree;
+};
+void split(struct memoryBlock *blockToSplit, size_t size);
+void printNode(struct memoryBlock *block);
+void printMessage(const char *message);
+void printAllNodes();
 
 #define ALIGNMENT 16
 #define SBRK_REQUEST 2048
@@ -41,8 +50,7 @@ void *malloc(size_t size) {
     while (current != NULL) {
         if (current->isFree == 1 && current->size >= size) {
             current->isFree = 0;
-            // Free the unused chunk so it is more efficent as I can use it later on 
-            // splitAndFreeUnused(current, size);
+            // Free the unused chunk so it is more efficent as user can use it later on 
             split(current, size);
             return (void *)((uintptr_t)current + STRUCT_SIZE);
         }
@@ -129,8 +137,7 @@ void *realloc(void *ptr, size_t size) {
     }
     
     if(blockToResize->size > size) {
-        // The existing block is large enough so split it and return a the pointer of the block which contains only the requested size
-        // splitAndFreeUnused(blockToResize, size);
+        // The existing block is large enough so split it and return the pointer of the block which contains only the requested size
         split(blockToResize, size);
         return ptr;
     } 

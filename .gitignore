@@ -2,4 +2,6 @@ my-malloc.so
 test-malloc
 test-malloc.strace
 vgcore.*
-my-malloc original.c
+my-malloc debugging.c
+.nfs000000008afc220800001b25
+.nfs000000008afd45cd00001ca5

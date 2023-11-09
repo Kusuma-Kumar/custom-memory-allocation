@@ -12,11 +12,10 @@ void free(void *ptr);
 void* calloc(size_t nmemb, size_t size);
 void* realloc(void* ptr, size_t size);
 size_t malloc_usable_size(void* ptr);
-void printNode(struct memoryBlock *block);
-void printMessage(const char *message);
-// void splitAndFreeUnused(struct memoryBlock* block, size_t size);
 void split(struct memoryBlock *blockToSplit, size_t size);
 size_t alignedSize(size_t size);
+void printNode(struct memoryBlock *block);
+void printMessage(const char *message);
 void printAllNodes();
 
 #endif
