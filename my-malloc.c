@@ -10,6 +10,10 @@ struct memoryBlock {
     int isFree;
 };
 
+void printNode(struct memoryBlock *block);
+void printMessage(const char *message);
+void printAllNodes();
+
 #define ALIGNMENT 16
 #define SBRK_REQUEST 2048
 
@@ -152,7 +156,6 @@ void *realloc(void *ptr, size_t size) {
 
         blockToResize->size = alignedSize(size);
         blockToResize->next = newBlock;
-        free(newBlock);
         return ptr;
     } 
     
@@ -187,10 +190,39 @@ size_t malloc_usable_size(void *ptr) {
 }
 
 size_t alignedSize(size_t size) {
-    // function to align any size request given according to the ALIGNMENT value
+    // function to align any size request given according to ALIGNMENT value
     if (size % ALIGNMENT == 0) {
         return size;
     } else {
         return ((size / ALIGNMENT) + 1) * ALIGNMENT;
+    }
+}
+
+void printAllNodes() {
+    printMessage("Printing all nodes\n");
+    struct memoryBlock *current = head;
+
+    while (current != NULL) {
+        printNode(current);
+        current = current->next;
+    }
+}
+
+void printMessage(const char *message) {
+    write(1, message, strlen(message));  // Write to stdout (fd = 1)
+}
+
+void printNode(struct memoryBlock *block) {
+    if (block != NULL) {
+        char buffer[256];
+        // Convert to strings before writing
+        snprintf(buffer, sizeof(buffer), "Block Size: %zu\n", block->size);
+        write(STDOUT_FILENO, buffer, strlen(buffer));
+
+        snprintf(buffer, sizeof(buffer), "Next block: %p\n", (void*)(block->next));
+        write(STDOUT_FILENO, buffer, strlen(buffer));
+
+        snprintf(buffer, sizeof(buffer), "Is Free: %d\n", block->isFree);
+        write(STDOUT_FILENO, buffer, strlen(buffer));
     }
 }
